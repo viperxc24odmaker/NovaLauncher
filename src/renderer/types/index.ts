@@ -1,97 +1,18 @@
 export type ModLoader = 'vanilla' | 'fabric' | 'forge' | 'neoforge'
-
-export interface Instance {
-  id: string
-  name: string
-  mcVersion: string
-  loader: ModLoader
-  loaderVersion?: string
-  iconPath: string | null
-  accentColor?: string
-  lastPlayed?: string
-  playTime: number
-  description?: string
-  createdAt: string
-}
-
+export interface Instance { id:string; name:string; mcVersion:string; loader:ModLoader; loaderVersion?:string; iconPath:string|null; accentColor?:string; lastPlayed?:string; playTime:number; description?:string; createdAt:string }
 export type AccountType = 'microsoft' | 'offline'
-
-export interface Account {
-  id: string
-  type: AccountType
-  username: string
-  uuid: string
-  avatarUrl: string | null
-  isActive: boolean
-}
-
-export interface Mod {
-  id: string
-  name: string
-  version: string
-  description?: string
-  author?: string
-  instanceIds: string[]
-  enabled: boolean
-  source: string
-  thumbnailUrl?: string
-}
-
-export interface Modpack {
-  id: string
-  name: string
-  version: string
-  mcVersion: string
-  loader: ModLoader
-  description?: string
-  author?: string
-  thumbnailUrl?: string
-  modCount: number
-}
-
-export interface AppSettings {
-  theme: 'dark' | 'light'
-  accentColor: string
-  launcherVisibility: 'hide' | 'close' | 'keep'
-  javaPath: string
-  downloadDir: string
-}
-
-export interface LaunchInstanceInput {
-  id: string
-  version: string
-  loader: ModLoader
-  loaderVersion?: string
-  memoryMin?: number
-  memoryMax?: number
-}
-
-export interface ModFile {
-  name: string
-  enabled: boolean
-}
-
+export interface Account { id:string; type:AccountType; username:string; uuid:string; avatarUrl:string|null; isActive:boolean }
+export interface Mod { id:string; name:string; version:string; description?:string; author?:string; instanceIds:string[]; enabled:boolean; source:string; thumbnailUrl?:string }
+export interface Modpack { id:string; name:string; version:string; mcVersion:string; loader:ModLoader; description?:string; author?:string; thumbnailUrl?:string; modCount:number }
+export interface AppSettings { theme:'dark'|'light'; accentColor:string; launcherVisibility:'hide'|'close'|'keep'; javaPath:string; downloadDir:string }
+export interface LaunchInstanceInput { id:string; version:string; loader:ModLoader; loaderVersion?:string; memoryMin?:number; memoryMax?:number }
+export interface ModFile { name:string; enabled:boolean }
 export interface ElectronAPI {
-  minimize: () => void
-  maximize: () => void
-  close: () => void
-  getSettings: () => Promise<AppSettings>
-  setSetting: (key: string, value: unknown) => Promise<boolean>
-  getVersion: () => Promise<string>
-  getMinecraftVersions: () => Promise<string[]>
-  loginMicrosoft: () => Promise<Account>
-  addOfflineAccount: (username: string) => Promise<Account>
-  getAccounts: () => Promise<Account[]>
-  removeAccount: (id: string) => Promise<void>
-  setActiveAccount: (id: string) => Promise<boolean>
-  installJava: (version: string) => Promise<void>
-  launchMinecraft: (input: LaunchInstanceInput) => Promise<void>
-  getMods: (instanceId: string) => Promise<ModFile[]>
-  toggleMod: (instanceId: string, fileName: string, enabled: boolean) => Promise<ModFile[]>
+  minimize:()=>void; maximize:()=>void; close:()=>void
+  getSettings:()=>Promise<AppSettings>; setSetting:(key:string,value:unknown)=>Promise<boolean>; getVersion:()=>Promise<string>
+  getMinecraftVersions:()=>Promise<string[]>; loginMicrosoft:()=>Promise<Account>; addOfflineAccount:(username:string)=>Promise<Account>
+  getAccounts:()=>Promise<Account[]>; removeAccount:(id:string)=>Promise<void>; setActiveAccount:(id:string)=>Promise<boolean>
+  installJava:(version:string)=>Promise<void>; launchMinecraft:(input:LaunchInstanceInput)=>Promise<void>
+  getMods:(instanceId:string)=>Promise<ModFile[]>; toggleMod:(instanceId:string,fileName:string,enabled:boolean)=>Promise<ModFile[]>; importMod:(instanceId:string)=>Promise<ModFile[]>
 }
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI
-  }
-}
+declare global { interface Window { electronAPI:ElectronAPI } }
