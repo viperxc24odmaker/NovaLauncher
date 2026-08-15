@@ -1,10 +1,8 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import { setupIpcHandlers } from './ipc/handlers'
-import { SettingsService } from './services/SettingsService'
 
-const isDev = process.env.NODE_ENV === 'development'
-
+const isDev = !app.isPackaged
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
@@ -13,42 +11,31 @@ function createWindow(): void {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    frame: false,          // We'll use a custom title bar
+    frame: false,
     backgroundColor: '#0f0f0f',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false
     },
-    show: false,
-    icon: join(__dirname, '../../assets/icon.ico')
+    show: false
   })
 
-  // Show window once renderer is ready (avoids flash of white)
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show()
-  })
-
-  // Open external links in system browser
+  mainWindow.once('ready-to-show', () => mainWindow?.show())
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    void shell.openExternal(url)
     return { action: 'deny' }
   })
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
+  if (isDev) void mainWindow.loadURL('http://localhost:5173')
+  else void mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
 }
 
-// Wire up IPC handlers (settings, window controls, etc.)
 setupIpcHandlers(ipcMain)
 
 app.whenReady().then(() => {
   createWindow()
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
