@@ -11,7 +11,8 @@
     "build:vite": "vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "npm run build && electron-builder --win",
+    "dist:dir": "npm run build && electron-builder --win --dir"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
@@ -39,7 +40,7 @@
     "directories": { "output": "release", "buildResources": "build" },
     "files": ["dist/**/*", "!dist/renderer/**/*"],
     "extraFiles": [{ "from": "dist/renderer", "to": "renderer" }],
-    "win": { "icon": "build/icon.svg", "target": [{ "target": "nsis", "arch": ["x64"] }] },
+    "win": { "icon": "build/icon.ico", "target": [{ "target": "nsis", "arch": ["x64"] }] },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
   }
 }
