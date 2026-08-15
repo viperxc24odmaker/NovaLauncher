@@ -1,0 +1,39 @@
+name: Test NovaLauncher Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - phase-2-modpacks-cosmetics-audit
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck and build
+        run: npm run build
+
+      - name: Package Windows application
+        run: npm run dist
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: NovaLauncher-Windows-Test
+          path: release/*.exe
+          if-no-files-found: error
