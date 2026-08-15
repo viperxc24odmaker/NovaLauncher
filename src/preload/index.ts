@@ -1,22 +1,22 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-/**
- * Preload: the only file that can safely touch both Node.js and browser APIs.
- *
- * We expose a minimal, typed API surface to the renderer via contextBridge.
- * The renderer NEVER accesses ipcRenderer directly.
- */
 contextBridge.exposeInMainWorld('electronAPI', {
-  // ── Window controls ──────────────────────────────────────────
   minimize: () => ipcRenderer.send('window:minimize'),
   maximize: () => ipcRenderer.send('window:maximize'),
-  close:    () => ipcRenderer.send('window:close'),
+  close: () => ipcRenderer.send('window:close'),
 
-  // ── Settings ──────────────────────────────────────────────────
   getSettings: () => ipcRenderer.invoke('settings:get'),
-  setSetting:  (key: string, value: unknown) =>
-    ipcRenderer.invoke('settings:set', key, value),
+  setSetting: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
+  getVersion: () => ipcRenderer.invoke('app:getVersion'),
 
-  // ── App info ──────────────────────────────────────────────────
-  getVersion: () => ipcRenderer.invoke('app:getVersion')
+  getMinecraftVersions: () => ipcRenderer.invoke('minecraft:versions'),
+  loginMicrosoft: () => ipcRenderer.invoke('minecraft:loginMicrosoft'),
+  addOfflineAccount: (username: string) => ipcRenderer.invoke('minecraft:addOffline', username),
+  getAccounts: () => ipcRenderer.invoke('minecraft:accounts'),
+  removeAccount: (id: string) => ipcRenderer.invoke('minecraft:removeAccount', id),
+  setActiveAccount: (id: string) => ipcRenderer.invoke('minecraft:setActiveAccount', id),
+  installJava: (version: string) => ipcRenderer.invoke('minecraft:installJava', version),
+  launchMinecraft: (input: unknown) => ipcRenderer.invoke('minecraft:launch', input),
+  getMods: (instanceId: string) => ipcRenderer.invoke('minecraft:mods', instanceId),
+  toggleMod: (instanceId: string, fileName: string, enabled: boolean) => ipcRenderer.invoke('minecraft:toggleMod', instanceId, fileName, enabled)
 })
