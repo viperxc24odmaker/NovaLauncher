@@ -1,9 +1,11 @@
-import { BrowserWindow, IpcMain, app, dialog } from 'electron'
+import { BrowserWindow, IpcMain, app } from 'electron'
 import { SettingsService } from '../services/SettingsService'
 import { AccountService } from '../services/AccountService'
 import { MinecraftService } from '../services/MinecraftService'
+import { ModpackService } from '../services/ModpackService'
+import { CosmeticsService } from '../services/CosmeticsService'
 
-const settingsService=new SettingsService();const accountService=new AccountService();const minecraftService=new MinecraftService(accountService)
+const settingsService=new SettingsService();const accountService=new AccountService();const minecraftService=new MinecraftService(accountService);const modpackService=new ModpackService();const cosmeticsService=new CosmeticsService(accountService)
 export function setupIpcHandlers(ipcMain:IpcMain):void{
   ipcMain.on('window:minimize',()=>BrowserWindow.getFocusedWindow()?.minimize())
   ipcMain.on('window:maximize',()=>{const win=BrowserWindow.getFocusedWindow();if(!win)return;win.isMaximized()?win.unmaximize():win.maximize()})
@@ -22,5 +24,12 @@ export function setupIpcHandlers(ipcMain:IpcMain):void{
   ipcMain.handle('minecraft:launch',(_event,input)=>minecraftService.launch(input))
   ipcMain.handle('minecraft:mods',(_event,instanceId:string)=>minecraftService.listMods(instanceId))
   ipcMain.handle('minecraft:toggleMod',(_event,instanceId:string,fileName:string,enabled:boolean)=>minecraftService.toggleMod(instanceId,fileName,enabled))
-  ipcMain.handle('minecraft:importMod',async(_event,instanceId:string)=>{const result=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Minecraft Mod',extensions:['jar']}]});if(result.canceled||!result.filePaths[0])return minecraftService.listMods(instanceId);return minecraftService.importMod(instanceId,result.filePaths[0])})
+  ipcMain.handle('minecraft:importMod',(_event,instanceId:string)=>minecraftService.importMod(instanceId,''))
+  ipcMain.handle('modpacks:search',(_event,query:string,mcVersion?:string,loader?:string)=>modpackService.search(query,mcVersion,loader))
+  ipcMain.handle('modpacks:import',(_event,instanceId:string)=>modpackService.importMrpack(instanceId))
+  ipcMain.handle('modpacks:install',(_event,instanceId:string,projectId:string)=>modpackService.installFromModrinth(instanceId,projectId))
+  ipcMain.handle('modpacks:list',(_event,instanceId?:string)=>modpackService.listInstalled(instanceId))
+  ipcMain.handle('cosmetics:get',(_event,accountId:string)=>cosmeticsService.getForAccount(accountId))
+  ipcMain.handle('cosmetics:switchCape',(_event,accountId:string,capeId:string)=>cosmeticsService.switchCape(accountId,capeId))
+  ipcMain.handle('cosmetics:hideCape',(_event,accountId:string)=>cosmeticsService.hideCape(accountId))
 }
