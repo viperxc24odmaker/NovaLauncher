@@ -1,5 +1,3 @@
-// ── Instance ──────────────────────────────────────────────────────────────────
-
 export type ModLoader = 'vanilla' | 'fabric' | 'forge' | 'neoforge'
 
 export interface Instance {
@@ -8,32 +6,24 @@ export interface Instance {
   mcVersion: string
   loader: ModLoader
   loaderVersion?: string
-  /** Path to a custom icon (PNG/JPG) chosen by the user, or null for default */
   iconPath: string | null
-  /** Accent color override for this instance card */
   accentColor?: string
-  lastPlayed?: string   // ISO date string
-  playTime: number      // total minutes played
+  lastPlayed?: string
+  playTime: number
   description?: string
-  createdAt: string     // ISO date string
+  createdAt: string
 }
 
-// ── Account ───────────────────────────────────────────────────────────────────
-
-export type AccountType = 'microsoft' | 'elyby' | 'offline'
+export type AccountType = 'microsoft' | 'offline'
 
 export interface Account {
   id: string
   type: AccountType
   username: string
-  /** UUID (online) or generated UUID (offline) */
   uuid: string
-  /** Display avatar URL — null for offline accounts */
   avatarUrl: string | null
   isActive: boolean
 }
-
-// ── Mod ───────────────────────────────────────────────────────────────────────
 
 export interface Mod {
   id: string
@@ -41,15 +31,11 @@ export interface Mod {
   version: string
   description?: string
   author?: string
-  /** Which instances this mod belongs to */
   instanceIds: string[]
   enabled: boolean
-  /** Source platform ('modrinth' | 'curseforge' | 'local') */
   source: string
   thumbnailUrl?: string
 }
-
-// ── Modpack ───────────────────────────────────────────────────────────────────
 
 export interface Modpack {
   id: string
@@ -63,8 +49,6 @@ export interface Modpack {
   modCount: number
 }
 
-// ── Settings ──────────────────────────────────────────────────────────────────
-
 export interface AppSettings {
   theme: 'dark' | 'light'
   accentColor: string
@@ -73,15 +57,37 @@ export interface AppSettings {
   downloadDir: string
 }
 
-// ── Electron API (injected by preload) ────────────────────────────────────────
+export interface LaunchInstanceInput {
+  id: string
+  version: string
+  loader: ModLoader
+  loaderVersion?: string
+  memoryMin?: number
+  memoryMax?: number
+}
+
+export interface ModFile {
+  name: string
+  enabled: boolean
+}
 
 export interface ElectronAPI {
-  minimize:    () => void
-  maximize:    () => void
-  close:       () => void
+  minimize: () => void
+  maximize: () => void
+  close: () => void
   getSettings: () => Promise<AppSettings>
-  setSetting:  (key: string, value: unknown) => Promise<boolean>
-  getVersion:  () => Promise<string>
+  setSetting: (key: string, value: unknown) => Promise<boolean>
+  getVersion: () => Promise<string>
+  getMinecraftVersions: () => Promise<string[]>
+  loginMicrosoft: () => Promise<Account>
+  addOfflineAccount: (username: string) => Promise<Account>
+  getAccounts: () => Promise<Account[]>
+  removeAccount: (id: string) => Promise<void>
+  setActiveAccount: (id: string) => Promise<boolean>
+  installJava: (version: string) => Promise<void>
+  launchMinecraft: (input: LaunchInstanceInput) => Promise<void>
+  getMods: (instanceId: string) => Promise<ModFile[]>
+  toggleMod: (instanceId: string, fileName: string, enabled: boolean) => Promise<ModFile[]>
 }
 
 declare global {
