@@ -1,48 +1,48 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Account } from '@/types'
-
-function generateId(): string {
-  return `acc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
-}
 
 export const useAccountStore = defineStore('accounts', () => {
   const accounts = ref<Account[]>([])
+  const initialized = ref(false)
 
-  const activeAccount = computed(() =>
-    accounts.value.find(a => a.isActive) ?? null
-  )
+  const activeAccount = computed(() => accounts.value.find(account => account.isActive) ?? null)
 
-  function addOfflineAccount(username: string): Account {
-    // Deactivate existing
-    accounts.value.forEach(a => (a.isActive = false))
+  async function load(): Promise<void> {
+    accounts.value = await window.electronAPI.getAccounts()
+    initialized.value = true
+  }
 
-    const account: Account = {
-      id: generateId(),
-      type: 'offline',
-      username,
-      uuid: crypto.randomUUID(),
-      avatarUrl: null,
-      isActive: true
-    }
-    accounts.value.push(account)
+  async function addOfflineAccount(username: string): Promise<Account> {
+    const account = await window.electronAPI.addOfflineAccount(username)
+    await load()
     return account
   }
 
-  function removeAccount(id: string) {
-    const idx = accounts.value.findIndex(a => a.id === id)
-    if (idx === -1) return
-    const wasActive = accounts.value[idx].isActive
-    accounts.value.splice(idx, 1)
-    // Activate the first remaining account if the removed one was active
-    if (wasActive && accounts.value.length > 0) {
-      accounts.value[0].isActive = true
-    }
+  async function loginMicrosoft(): Promise<Account> {
+    const account = await window.electronAPI.loginMicrosoft()
+    await load()
+    return account
   }
 
-  function setActive(id: string) {
-    accounts.value.forEach(a => (a.isActive = a.id === id))
+  async function removeAccount(id: string): Promise<void> {
+    await window.electronAPI.removeAccount(id)
+    await load()
   }
 
-  return { accounts, activeAccount, addOfflineAccount, removeAccount, setActive }
+  async function setActive(id: string): Promise<void> {
+    await window.electronAPI.setActiveAccount(id)
+    await load()
+  }
+
+  return {
+    accounts,
+    initialized,
+    activeAccount,
+    load,
+    addOfflineAccount,
+    loginMicrosoft,
+    removeAccount,
+    setActive
+  }
 })
