@@ -1,7 +1,7 @@
 {
-  "name": "mc-launcher",
-  "version": "1.0.0",
-  "description": "A modern Minecraft Java Edition launcher",
+  "name": "novalauncher",
+  "version": "0.2.0",
+  "description": "NovaLauncher - a modern Minecraft Java Edition launcher",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
@@ -26,13 +26,14 @@
   },
   "dependencies": {
     "electron-store": "^8.2.0",
+    "eml-lib": "^2.7.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.25",
     "vue-router": "^4.3.2"
   },
   "build": {
-    "appId": "com.mclaunch.app",
-    "productName": "MC Launcher",
+    "appId": "com.novalauncher.app",
+    "productName": "NovaLauncher",
     "directories": {
       "output": "release"
     },
