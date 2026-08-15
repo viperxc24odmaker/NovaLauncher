@@ -6,18 +6,19 @@
     <div v-if="busy" class="loading">Working…</div>
     <div v-if="results.length" class="grid"><article v-for="pack in results" :key="pack.id" class="card"><img v-if="pack.iconUrl" :src="pack.iconUrl" class="icon"/><div v-else class="icon fallback">📦</div><div class="body"><h3>{{ pack.title }}</h3><p>{{ pack.description || 'No description.' }}</p><small>{{ pack.author }} · {{ pack.downloads.toLocaleString() }} downloads</small></div><button class="install" :disabled="busy||!selectedInstance" @click="install(pack.id)">Install</button></article></div>
     <div v-else-if="!busy" class="empty"><span>📦</span><h2>Find a modpack</h2><p>Search Modrinth or import a .mrpack file.</p></div>
-    <section v-if="installed.length" class="installed"><h2>Installed Packs</h2><div v-for="pack in installed" :key="pack.id+pack.instanceId" class="installed-row"><div><strong>{{ pack.name }}</strong><span>{{ pack.mcVersion }} · {{ pack.loader }}</span></div><small>{{ pack.fileName }}</small></div></section>
+    <section v-if="installed.length" class="installed"><h2>Installed Packs</h2><div v-for="pack in installed" :key="pack.id+pack.instanceId" class="installed-row"><div><strong>{{ pack.name }}</strong><span>{{ pack.mcVersion }} · {{ pack.loader }}{{ pack.loaderVersion?' '+pack.loaderVersion:'' }}</span></div><small>{{ pack.fileName }}</small></div></section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useInstanceStore } from '@/stores/instanceStore'
-import type { InstalledModpack, ModpackSearchResult } from '@/types'
+import type { InstalledModpack, ModLoader, ModpackSearchResult } from '@/types'
 const instanceStore=useInstanceStore();const query=ref('');const selectedInstance=ref('');const results=ref<ModpackSearchResult[]>([]);const installed=ref<InstalledModpack[]>([]);const busy=ref(false);const error=ref('')
+function applyPack(pack:InstalledModpack){const instance=instanceStore.getById(pack.instanceId);if(!instance)return;if(pack.mcVersion&&pack.mcVersion!=='unknown')instance.mcVersion=pack.mcVersion;if(['vanilla','fabric','forge','neoforge'].includes(pack.loader))instance.loader=pack.loader as ModLoader;instance.loaderVersion=pack.loaderVersion||undefined}
 async function search(){busy.value=true;error.value='';try{results.value=await window.electronAPI.searchModpacks(query.value.trim())}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
-async function install(projectId:string){if(!selectedInstance.value)return;busy.value=true;error.value='';try{await window.electronAPI.installModpack(selectedInstance.value,projectId);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
-async function importPack(){if(!selectedInstance.value)return;busy.value=true;error.value='';try{await window.electronAPI.importModpack(selectedInstance.value);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
+async function install(projectId:string){if(!selectedInstance.value)return;busy.value=true;error.value='';try{const pack=await window.electronAPI.installModpack(selectedInstance.value,projectId);applyPack(pack);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
+async function importPack(){if(!selectedInstance.value)return;busy.value=true;error.value='';try{const pack=await window.electronAPI.importModpack(selectedInstance.value);applyPack(pack);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
 async function loadInstalled(){installed.value=await window.electronAPI.getInstalledModpacks(selectedInstance.value||undefined)}
 onMounted(async()=>{if(instanceStore.instances[0])selectedInstance.value=instanceStore.instances[0].id;await loadInstalled()})
 watch(selectedInstance,loadInstalled)
