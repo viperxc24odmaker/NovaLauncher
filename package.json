@@ -36,10 +36,10 @@
   "build": {
     "appId": "com.novalauncher.app",
     "productName": "NovaLauncher",
-    "directories": { "output": "release" },
+    "directories": { "output": "release", "buildResources": "build" },
     "files": ["dist/**/*", "!dist/renderer/**/*"],
     "extraFiles": [{ "from": "dist/renderer", "to": "renderer" }],
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
+    "win": { "icon": "build/icon.svg", "target": [{ "target": "nsis", "arch": ["x64"] }] },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
   }
 }
