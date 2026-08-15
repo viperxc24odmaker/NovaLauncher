@@ -19,7 +19,7 @@ async function search(){busy.value=true;error.value='';try{results.value=await w
 async function install(projectId:string){if(!selectedInstance.value)return;busy.value=true;error.value='';try{await window.electronAPI.installModpack(selectedInstance.value,projectId);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
 async function importPack(){if(!selectedInstance.value)return;busy.value=true;error.value='';try{await window.electronAPI.importModpack(selectedInstance.value);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
 async function loadInstalled(){installed.value=await window.electronAPI.getInstalledModpacks(selectedInstance.value||undefined)}
-onMounted(async()=>{await instanceStore.load();if(instanceStore.instances[0])selectedInstance.value=instanceStore.instances[0].id;await loadInstalled()})
+onMounted(async()=>{if(instanceStore.instances[0])selectedInstance.value=instanceStore.instances[0].id;await loadInstalled()})
 watch(selectedInstance,loadInstalled)
 </script>
 
