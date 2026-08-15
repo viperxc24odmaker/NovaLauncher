@@ -1,45 +1,29 @@
 <template>
-  <div class="view-placeholder">
-    <div class="placeholder-content">
-      <span class="placeholder-icon">📦</span>
-      <h2>Modpacks</h2>
-      <p>Import, export, and browse full modpack collections.<br>Coming in the next milestone.</p>
-      <div class="pill">Planned: Modrinth · CurseForge · Custom Packs</div>
-    </div>
+  <div class="modpacks-view">
+    <div class="page-header"><div><h1 class="page-title">Modpacks</h1><p class="page-sub">Browse Modrinth packs or install a local .mrpack into an isolated instance.</p></div><button class="primary" :disabled="busy||!selectedInstance" @click="importPack">Import .mrpack</button></div>
+    <div class="toolbar"><input v-model="query" class="search" placeholder="Search Modrinth modpacks..." @keyup.enter="search"/><select v-model="selectedInstance" class="select"><option value="">Choose instance</option><option v-for="instance in instanceStore.instances" :key="instance.id" :value="instance.id">{{ instance.name }}</option></select><button class="secondary" :disabled="busy||!query.trim()" @click="search">Search</button></div>
+    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="busy" class="loading">Working…</div>
+    <div v-if="results.length" class="grid"><article v-for="pack in results" :key="pack.id" class="card"><img v-if="pack.iconUrl" :src="pack.iconUrl" class="icon"/><div v-else class="icon fallback">📦</div><div class="body"><h3>{{ pack.title }}</h3><p>{{ pack.description || 'No description.' }}</p><small>{{ pack.author }} · {{ pack.downloads.toLocaleString() }} downloads</small></div><button class="install" :disabled="busy||!selectedInstance" @click="install(pack.id)">Install</button></article></div>
+    <div v-else-if="!busy" class="empty"><span>📦</span><h2>Find a modpack</h2><p>Search Modrinth or import a .mrpack file.</p></div>
+    <section v-if="installed.length" class="installed"><h2>Installed Packs</h2><div v-for="pack in installed" :key="pack.id+pack.instanceId" class="installed-row"><div><strong>{{ pack.name }}</strong><span>{{ pack.mcVersion }} · {{ pack.loader }}{{ pack.loaderVersion?' '+pack.loaderVersion:'' }}</span></div><small>{{ pack.fileName }}</small></div></section>
   </div>
 </template>
 
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import { useInstanceStore } from '@/stores/instanceStore'
+import type { InstalledModpack, ModLoader, ModpackSearchResult } from '@/types'
+const instanceStore=useInstanceStore();const query=ref('');const selectedInstance=ref('');const results=ref<ModpackSearchResult[]>([]);const installed=ref<InstalledModpack[]>([]);const busy=ref(false);const error=ref('')
+function applyPack(pack:InstalledModpack){const instance=instanceStore.getById(pack.instanceId);if(!instance)return;if(pack.mcVersion&&pack.mcVersion!=='unknown')instance.mcVersion=pack.mcVersion;if(['vanilla','fabric','forge','neoforge'].includes(pack.loader))instance.loader=pack.loader as ModLoader;instance.loaderVersion=pack.loaderVersion||undefined}
+async function search(){busy.value=true;error.value='';try{results.value=await window.electronAPI.searchModpacks(query.value.trim())}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
+async function install(projectId:string){if(!selectedInstance.value)return;busy.value=true;error.value='';try{const pack=await window.electronAPI.installModpack(selectedInstance.value,projectId);applyPack(pack);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
+async function importPack(){if(!selectedInstance.value)return;busy.value=true;error.value='';try{const pack=await window.electronAPI.importModpack(selectedInstance.value);applyPack(pack);await loadInstalled()}catch(err){error.value=err instanceof Error?err.message:String(err)}finally{busy.value=false}}
+async function loadInstalled(){installed.value=await window.electronAPI.getInstalledModpacks(selectedInstance.value||undefined)}
+onMounted(async()=>{if(instanceStore.instances[0])selectedInstance.value=instanceStore.instances[0].id;await loadInstalled()})
+watch(selectedInstance,loadInstalled)
+</script>
+
 <style scoped>
-.view-placeholder {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-.placeholder-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  max-width: 400px;
-}
-
-.placeholder-icon { font-size: 48px; }
-
-h2 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-p  { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-
-.pill {
-  margin-top: 8px;
-  padding: 6px 14px;
-  background: var(--accent-dim);
-  color: var(--accent);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
+.modpacks-view{padding:32px 40px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:22px}.page-header{display:flex;align-items:center;justify-content:space-between}.page-title{font-size:22px;font-weight:700}.page-sub{font-size:12px;color:var(--text-secondary);margin-top:3px}.toolbar{display:flex;gap:10px}.search{flex:1;padding:11px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-md);color:var(--text-primary)}.select{min-width:190px;padding:11px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-md);color:var(--text-primary)}button{border-radius:var(--radius-md);font-weight:600;cursor:pointer}.primary,.install{background:var(--accent);color:#000;padding:10px 15px}.secondary{padding:10px 16px;border:1px solid var(--border);color:var(--text-primary)}button:disabled{opacity:.45;cursor:not-allowed}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}.card{display:flex;gap:12px;padding:14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-md);align-items:center}.icon{width:56px;height:56px;border-radius:12px;object-fit:cover;flex:none}.fallback{display:flex;align-items:center;justify-content:center;background:var(--accent-dim);font-size:25px}.body{min-width:0;flex:1}.body h3{font-size:14px}.body p{font-size:11px;color:var(--text-secondary);margin:4px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.body small,.installed-row span,.installed-row small{font-size:10px;color:var(--text-muted)}.empty{text-align:center;padding:70px;color:var(--text-secondary)}.empty span{font-size:44px}.empty h2{color:var(--text-primary);margin:10px}.error{padding:10px 12px;color:#ff9090;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.18);border-radius:var(--radius-md);font-size:12px}.loading{text-align:center;color:var(--text-secondary)}.installed{border-top:1px solid var(--border);padding-top:20px}.installed h2{font-size:14px;margin-bottom:10px}.installed-row{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-md);margin-bottom:7px}.installed-row div{display:flex;flex-direction:column;gap:3px}
 </style>

@@ -11,9 +11,11 @@
     "build:vite": "vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "npm run build && electron-builder --win",
+    "dist:dir": "npm run build && electron-builder --win --dir"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
     "@types/node": "^20.12.7",
     "@vitejs/plugin-vue": "^5.0.4",
     "concurrently": "^8.2.2",
@@ -25,6 +27,7 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "electron-store": "^8.2.0",
     "eml-lib": "^2.7.0",
     "pinia": "^2.1.7",
@@ -34,7 +37,7 @@
   "build": {
     "appId": "com.novalauncher.app",
     "productName": "NovaLauncher",
-    "directories": { "output": "release" },
+    "directories": { "output": "release", "buildResources": "build" },
     "files": ["dist/**/*", "!dist/renderer/**/*"],
     "extraFiles": [{ "from": "dist/renderer", "to": "renderer" }],
     "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
